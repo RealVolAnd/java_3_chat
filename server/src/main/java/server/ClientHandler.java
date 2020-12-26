@@ -39,7 +39,6 @@ public class ClientHandler {
                                     sendMsg("/regno");
                                 }
                             }
-
                             if (str.startsWith("/auth ")) {
                                 String[] token = str.split("\\s", 3);
                                 String newNick = server.getAuthService()
@@ -77,6 +76,11 @@ public class ClientHandler {
                             if (str.equals("/end")) {
                                 out.writeUTF("/end");
                                 break;
+                            }
+                            if (str.startsWith("/chnick ")) {
+                                String[] token = str.split("\\s", 2);
+                                server.getAuthService().changeNickName(this.login,token[1]);
+                                out.writeUTF("/chnickok");
                             }
                         } else {
                             server.broadcastMsg(this, str);

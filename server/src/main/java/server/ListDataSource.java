@@ -6,7 +6,7 @@ import java.util.List;
 public class ListDataSource implements DataSource {
     private List<UserData> users;
 
-    public ListDataSource(){
+    public ListDataSource() {
         users = new ArrayList<>();
         users.add(new UserData("qwe", "qwe", "qwe"));
         users.add(new UserData("asd", "asd", "asd"));
@@ -22,7 +22,15 @@ public class ListDataSource implements DataSource {
     }
 
     @Override
-    public int setUserData(UserData userdata) {
+    public int changeUserNick(String login, String newNick) {
+        for (UserData item : users) {
+            if (item.login.equals(login)) item.nickname = newNick;
+        }
+        return 0;
+    }
+
+    @Override
+    public int putUserData(UserData userdata) {
         users.add(userdata);
         return 0;
     }

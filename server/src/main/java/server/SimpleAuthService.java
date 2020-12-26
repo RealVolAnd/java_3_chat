@@ -6,19 +6,19 @@ import java.util.List;
 public class SimpleAuthService implements AuthService {
 
     private List<UserData> users;
-   //private ListDataSource datasource;
-    private SQLiteDataSource datasource;
+    private ListDataSource datasource;
+    //private SQLiteDataSource datasource;
 
     public SimpleAuthService() {
-        //datasource=new ListDataSource();
-        datasource=new SQLiteDataSource();
+        datasource=new ListDataSource();
+       // datasource = new SQLiteDataSource();
         refreshData();
     }
 
     @Override
     public String getNicknameByLoginAndPassword(String login, String password) {
         for (UserData user : users) {
-            if(user.login.equals(login) && user.password.equals(password)){
+            if (user.login.equals(login) && user.password.equals(password)) {
                 return user.nickname;
             }
         }
@@ -28,14 +28,20 @@ public class SimpleAuthService implements AuthService {
     @Override
     public boolean registration(String login, String password, String nickname) {
         for (UserData user : users) {
-            if(user.login.equals(login) || user.nickname.equals(nickname)){
+            if (user.login.equals(login) || user.nickname.equals(nickname)) {
                 return false;
             }
         }
 
-        datasource.setUserData(new UserData(login, password, nickname));
+        datasource.putUserData(new UserData(login, password, nickname));
         refreshData();
         return true;
+    }
+
+    @Override
+    public void changeNickName(String login, String nickname) {
+        datasource.changeUserNick(login, nickname);
+        refreshData();
     }
 
     @Override

@@ -8,14 +8,14 @@ public class SQLiteDataSource implements DataSource {
     private static Connection connection;
     private static Statement stmt;
     private static PreparedStatement psInsert;
+    private static PreparedStatement psUpdate;
 
     public SQLiteDataSource() {
         try {
             connect();
             System.out.println("Connection to SQLite DB is OK!");
             prepareAllStatements();
-            clearTable();
-            fillDB();
+            //fillDB();
 
         } catch (ClassNotFoundException | SQLException e) {
             System.out.println("Connection Failed");
@@ -81,7 +81,20 @@ public class SQLiteDataSource implements DataSource {
     }
 
     @Override
-    public int setUserData(UserData userdata) {
+    public int changeUserNick(String login, String newNick) {
+        try {
+            psUpdate.setString(1, newNick);
+            psUpdate.setString(2, login);
+            psUpdate.executeUpdate();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            return 1;
+        }
+        return 0;
+    }
+
+    @Override
+    public int putUserData(UserData userdata) {
         try {
             psInsert.setString(1, userdata.login);
             psInsert.setString(2, userdata.password);
@@ -96,5 +109,6 @@ public class SQLiteDataSource implements DataSource {
 
     private static void prepareAllStatements() throws SQLException {
         psInsert = connection.prepareStatement("INSERT INTO users (login, password, nickname) VALUES (?, ?, ?);");
+        psUpdate = connection.prepareStatement("UPDATE users SET nickname = ? WHERE login= ?;");
     }
 }

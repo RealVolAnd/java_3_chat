@@ -5,5 +5,8 @@ import java.util.List;
 
 public interface DataSource {
     public List<UserData> getUsersData();
-    public int setUserData(UserData userdata);
+
+    public int putUserData(UserData userdata);
+
+    public int changeUserNick(String login, String newNick);
 }
