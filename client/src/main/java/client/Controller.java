@@ -15,6 +15,7 @@ import javafx.stage.Stage;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
@@ -52,6 +53,7 @@ public class Controller implements Initializable {
     private RegController regController;
     private Stage ChNickStage;
     private ChNickController chNickController;
+    private History chatHistory;
 
     public void setAuthenticated(boolean authenticated) {
         this.authenticated = authenticated;
@@ -88,6 +90,7 @@ public class Controller implements Initializable {
             });
         });
         setAuthenticated(false);
+        chatHistory = new History(new File(new File(".").getAbsolutePath()));
     }
 
     private void connect() {
@@ -105,6 +108,7 @@ public class Controller implements Initializable {
                         if (str.startsWith("/")) {
                             if (str.equals("/regok")) {
                                 regController.addMessage("Регистрация прошла успешно");
+
                             }
                             if (str.equals("/regno")) {
                                 regController.addMessage("Регистрация не получилась\n" +
@@ -115,6 +119,7 @@ public class Controller implements Initializable {
                             if (str.startsWith("/authok ")) {
                                 nickname = str.split("\\s")[1];
                                 setAuthenticated(true);
+                                chatHistory.historyInit(str.split("\\s")[2], textArea);
                                 break;
                             }
 
@@ -136,15 +141,18 @@ public class Controller implements Initializable {
                                     }
                                 });
                             }
-                            if (str.equals("/chnickok")) {
-                                chNickController.addMessage("Ник изменен\n" +
-                                        "Новый ник будет использоваться\n после следующей регистрации");
+                            if (str.startsWith("/chnickok")) {
+                                nickname = str.split("\\s")[1];
+                                chNickController.addMessage("Ник изменен на \n" + nickname);
+                                setAuthenticated(true);
+
                             }
                             if (str.equals("/end")) {
                                 break;
                             }
                         } else {
                             textArea.appendText(str + "\n");
+                            chatHistory.saveStringToHistory(str);
                         }
                     }
                 } catch (IOException e) {
