@@ -7,10 +7,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.ListView;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
@@ -18,6 +15,7 @@ import javafx.stage.Stage;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.URL;
@@ -38,6 +36,8 @@ public class Controller implements Initializable {
     private HBox msgPanel;
     @FXML
     private ListView<String> clientList;
+    @FXML
+    private Button chnickBtn;
 
     private Socket socket;
     private final String IP_ADDRESS = "localhost";
@@ -51,6 +51,9 @@ public class Controller implements Initializable {
     private Stage stage;
     private Stage regStage;
     private RegController regController;
+    private Stage ChNickStage;
+    private ChNickController chNickController;
+    private History chatHistory;
 
     public void setAuthenticated(boolean authenticated) {
         this.authenticated = authenticated;
@@ -60,6 +63,8 @@ public class Controller implements Initializable {
         authPanel.setManaged(!authenticated);
         clientList.setManaged(authenticated);
         clientList.setVisible(authenticated);
+        chnickBtn.setManaged(authenticated);
+        chnickBtn.setVisible(authenticated);
         if (!authenticated) {
             nickname = "";
         }
@@ -69,6 +74,7 @@ public class Controller implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        createChNickWindow();
         createRegWindow();
         Platform.runLater(() -> {
             stage = (Stage) textField.getScene().getWindow();
@@ -84,6 +90,7 @@ public class Controller implements Initializable {
             });
         });
         setAuthenticated(false);
+        chatHistory = new History(new File(new File(".").getAbsolutePath()));
     }
 
     private void connect() {
@@ -101,15 +108,18 @@ public class Controller implements Initializable {
                         if (str.startsWith("/")) {
                             if (str.equals("/regok")) {
                                 regController.addMessage("Регистрация прошла успешно");
+
                             }
                             if (str.equals("/regno")) {
                                 regController.addMessage("Регистрация не получилась\n" +
                                         "Возможно предложенные лоин или никнейм уже заняты");
                             }
 
+
                             if (str.startsWith("/authok ")) {
                                 nickname = str.split("\\s")[1];
                                 setAuthenticated(true);
+                                chatHistory.historyInit(str.split("\\s")[2], textArea);
                                 break;
                             }
 
@@ -131,11 +141,18 @@ public class Controller implements Initializable {
                                     }
                                 });
                             }
+                            if (str.startsWith("/chnickok")) {
+                                nickname = str.split("\\s")[1];
+                                chNickController.addMessage("Ник изменен на \n" + nickname);
+                                setAuthenticated(true);
+
+                            }
                             if (str.equals("/end")) {
                                 break;
                             }
                         } else {
                             textArea.appendText(str + "\n");
+                            chatHistory.saveStringToHistory(str);
                         }
                     }
                 } catch (IOException e) {
@@ -180,6 +197,7 @@ public class Controller implements Initializable {
         }
     }
 
+
     private void setTitle(String username) {
         String title = String.format("СпэйсЧат [ %s ]", username);
         if (username.equals("")) {
@@ -215,13 +233,49 @@ public class Controller implements Initializable {
 
     }
 
+    private void createChNickWindow() {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/chnick.fxml"));
+            Parent root = fxmlLoader.load();
+            ChNickStage = new Stage();
+            ChNickStage.setTitle("Изменить ник");
+            ChNickStage.setScene(new Scene(root, 350, 300));
+            ChNickStage.initModality(Modality.APPLICATION_MODAL);
+            chNickController = fxmlLoader.getController();
+            chNickController.setController(this);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     @FXML
     public void showRegWindow(ActionEvent actionEvent) {
         regStage.show();
     }
 
+    @FXML
+    public void showChNickWindow(ActionEvent actionEvent) {
+        ChNickStage.show();
+    }
+
     public void tryToReg(String login, String password, String nickname) {
         String msg = String.format("/reg %s %s %s", login, password, nickname);
+
+        if (socket == null || socket.isClosed()) {
+            connect();
+        }
+
+        try {
+            out.writeUTF(msg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void tryToChNick(String nickname) {
+        String msg = String.format("/chnick %s", nickname);
 
         if (socket == null || socket.isClosed()) {
             connect();

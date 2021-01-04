@@ -39,7 +39,6 @@ public class ClientHandler {
                                     sendMsg("/regno");
                                 }
                             }
-
                             if (str.startsWith("/auth ")) {
                                 String[] token = str.split("\\s", 3);
                                 String newNick = server.getAuthService()
@@ -48,7 +47,7 @@ public class ClientHandler {
                                     login = token[1];
                                     if (!server.isloginAuthenticated(login)) {
                                         nickname = newNick;
-                                        out.writeUTF("/authok " + nickname);
+                                        out.writeUTF("/authok " + nickname + " " + login);
                                         server.subscribe(this);
                                         break;
                                     } else {
@@ -78,11 +77,18 @@ public class ClientHandler {
                                 out.writeUTF("/end");
                                 break;
                             }
+                            if (str.startsWith("/chnick ")) {
+                                String[] token = str.split("\\s", 2);
+                                server.getAuthService().changeNickName(this.login, token[1]);
+                                nickname = token[1];
+                                out.writeUTF("/chnickok " + nickname);
+                                server.broadcastClientList();
+                            }
                         } else {
                             server.broadcastMsg(this, str);
                         }
                     }
-                //catch SocketTimeoutException
+                    //catch SocketTimeoutException
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {

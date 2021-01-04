@@ -4,34 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SimpleAuthService implements AuthService {
-    private class UserData {
-        String login;
-        String password;
-        String nickname;
-
-        public UserData(String login, String password, String nickname) {
-            this.login = login;
-            this.password = password;
-            this.nickname = nickname;
-        }
-    }
 
     private List<UserData> users;
+    private ListDataSource datasource;
+    //private SQLiteDataSource datasource;
 
     public SimpleAuthService() {
-        users = new ArrayList<>();
-        users.add(new UserData("qwe", "qwe", "qwe"));
-        users.add(new UserData("asd", "asd", "asd"));
-        users.add(new UserData("zxc", "zxc", "zxc"));
-        for (int i = 1; i <= 10; i++) {
-            users.add(new UserData("login" + i, "pass" + i, "nick" + i));
-        }
+        datasource=new ListDataSource();
+       // datasource = new SQLiteDataSource();
+        refreshData();
     }
 
     @Override
     public String getNicknameByLoginAndPassword(String login, String password) {
         for (UserData user : users) {
-            if(user.login.equals(login) && user.password.equals(password)){
+            if (user.login.equals(login) && user.password.equals(password)) {
                 return user.nickname;
             }
         }
@@ -41,12 +28,24 @@ public class SimpleAuthService implements AuthService {
     @Override
     public boolean registration(String login, String password, String nickname) {
         for (UserData user : users) {
-            if(user.login.equals(login) || user.nickname.equals(nickname)){
+            if (user.login.equals(login) || user.nickname.equals(nickname)) {
                 return false;
             }
         }
 
-        users.add(new UserData(login, password, nickname));
+        datasource.putUserData(new UserData(login, password, nickname));
+        refreshData();
         return true;
+    }
+
+    @Override
+    public void changeNickName(String login, String nickname) {
+        datasource.changeUserNick(login, nickname);
+        refreshData();
+    }
+
+    @Override
+    public void refreshData() {
+        users = datasource.getUsersData();
     }
 }
